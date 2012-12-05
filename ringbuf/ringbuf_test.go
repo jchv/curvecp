@@ -1,4 +1,4 @@
-package curvecp
+package ringbuf
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ type rbtest struct {
 }
 
 func TestRingbuf(t *testing.T) {
-	r := newRingbuf(5)
+	r := New(5)
 
 	tab := []rbtest{
 		{doWrite, "abc", 0, 3, 3},
