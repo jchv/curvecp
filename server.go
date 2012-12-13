@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"code.google.com/p/curvecp/freelist"
 	"code.google.com/p/go.crypto/nacl/box"
 	"code.google.com/p/go.crypto/nacl/secretbox"
 )
@@ -133,7 +134,7 @@ func (s *server) Addr() net.Addr {
 }
 
 func readLoop(sock *net.UDPConn, packetIn chan<- packet) {
-	pb := packetBuf.Get()
+	pb := freelist.Packets.Get()
 	for {
 		// CurveCP datagrams are specified to always fit in the
 		// smallest IPv6 datagram, 1280 bytes.
@@ -150,7 +151,7 @@ func readLoop(sock *net.UDPConn, packetIn chan<- packet) {
 		pb = pb[:n]
 		// messageMagic first, since it's the most common.
 		packetIn <- packet{addr, pb}
-		pb = packetBuf.Get()
+		pb = freelist.Packets.Get()
 	}
 }
 
@@ -161,7 +162,7 @@ func (s *server) pump() {
 		select {
 		case packet := <- s.packetIn:
 			if s.checkHello(packet.buf) {
-				resp := packetBuf.Get()
+				resp := freelist.Packets.Get()
 				resp, scratch := resp[:200], resp[200:]
 
 				pkey, skey, err := box.GenerateKey(rand.Reader)
@@ -202,7 +203,7 @@ func (s *server) pump() {
 				copy(resp[40:], nonce[8:])
 
 				s.sock.WriteTo(resp, packet.Addr)
-				packetBuf.Put(resp)
+				freelist.Packets.Put(resp)
 
 			} else if serverShortTermKey, domain, valid := s.checkInitiate(packet.buf); valid {
 				clientShortTermKey := packet.buf[40:40+32]

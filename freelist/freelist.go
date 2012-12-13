@@ -4,7 +4,7 @@
 package freelist
 
 // Freelist of 1280 byte buffers, big enough for CurveCP packets.
-var PacketBuf = New(1280)
+var Packets = New(1280)
 
 type List struct {
 	size int
