@@ -64,7 +64,6 @@ package curvecp
 // once the packet has been verified and the plaintext content copied
 // over the box.
 
-
 // SERVER MESSAGE format:
 //
 // 0  : 8    : magic

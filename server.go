@@ -1,8 +1,8 @@
 package curvecp
 
 import (
-	"crypto/rand"
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"io"
 	"net"
@@ -18,19 +18,19 @@ var (
 	notImplemented = errors.New("not implemented")
 
 	// Magic IDs at the beginning of packets.
-	helloMagic = []byte("QvnQ5XlH")
-	cookieMagic = []byte("RL3aNMXK")
+	helloMagic    = []byte("QvnQ5XlH")
+	cookieMagic   = []byte("RL3aNMXK")
 	initiateMagic = []byte("QvnQ5XlI")
-	messageMagic = []byte("RL3aNMXM")
+	messageMagic  = []byte("RL3aNMXM")
 
 	// The prefixes for various nonces
-	helloNoncePrefix = []byte("CurveCP-client-H")
-	cookieNoncePrefix = []byte("CurveCPK")
-	initiateNoncePrefix = []byte("CurveCP-client-I")
-	vouchNoncePrefix = []byte("CurveCPV")
+	helloNoncePrefix         = []byte("CurveCP-client-H")
+	cookieNoncePrefix        = []byte("CurveCPK")
+	initiateNoncePrefix      = []byte("CurveCP-client-I")
+	vouchNoncePrefix         = []byte("CurveCPV")
 	serverMessageNoncePrefix = []byte("CurveCP-server-M")
 	clientMessageNoncePrefix = []byte("CurveCP-client-M")
-	minuteNoncePrefix = []byte("minute-k")
+	minuteNoncePrefix        = []byte("minute-k")
 )
 
 type packet struct {
@@ -71,15 +71,15 @@ func newServer(sock *net.UDPConn, key []byte) *server {
 		panic("Wrong key length")
 	}
 	s := &server{
-	packetIn: make(chan packet),
-	stopListen: make(chan struct{}),
-	newConn: make(chan *conn),
-	endConn: make(chan string),
+		packetIn:   make(chan packet),
+		stopListen: make(chan struct{}),
+		newConn:    make(chan *conn),
+		endConn:    make(chan string),
 
-	sock: sock,
-	listen: true,
+		sock:   sock,
+		listen: true,
 
-	conns: make(map[string]chan packet),
+		conns: make(map[string]chan packet),
 	}
 	copy(s.longTermSecretKey[:], key)
 	randBytes(s.minuteKey[:])
@@ -156,11 +156,11 @@ func readLoop(sock *net.UDPConn, packetIn chan<- packet) {
 }
 
 func (s *server) pump() {
-	rotateMinuteKey := time.NewTicker(30*time.Second)
+	rotateMinuteKey := time.NewTicker(30 * time.Second)
 
 	for {
 		select {
-		case packet := <- s.packetIn:
+		case packet := <-s.packetIn:
 			if s.checkHello(packet.buf) {
 				resp := freelist.Packets.Get()
 				resp, scratch := resp[:200], resp[200:]
@@ -206,8 +206,8 @@ func (s *server) pump() {
 				freelist.Packets.Put(resp)
 
 			} else if serverShortTermKey, domain, valid := s.checkInitiate(packet.buf); valid {
-				clientShortTermKey := packet.buf[40:40+32]
-				clientLongTermKey := packet.buf[176:176+32]
+				clientShortTermKey := packet.buf[40 : 40+32]
+				clientLongTermKey := packet.buf[176 : 176+32]
 				if ch, ok := s.conns[string(clientShortTermKey)]; ok {
 					// Forward the Initiate to the conn. Because
 					// checkInitiate replaces the box in the Initiate
@@ -315,7 +315,7 @@ func (s *server) checkInitiate(pb []byte) (serverShortTermKey []byte, domain str
 		return
 	}
 
-	if domain = domainToString(initiate[96:96+256]); domain == "" {
+	if domain = domainToString(initiate[96 : 96+256]); domain == "" {
 		return
 	}
 
@@ -339,7 +339,7 @@ func (s *server) checkInitiate(pb []byte) (serverShortTermKey []byte, domain str
 	// The Initiate packet is valid, replace the encrypted box with
 	// the plaintext and return.
 	copy(pb[176:], initiate)
-	for i := len(pb)-box.Overhead; i < len(pb); i++ {
+	for i := len(pb) - box.Overhead; i < len(pb); i++ {
 		pb[i] = 0
 	}
 	valid = true
@@ -368,5 +368,5 @@ func domainToString(d []byte) string {
 func randBytes(b []byte) {
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		panic("Ran out of randomness")
-	}		
+	}
 }

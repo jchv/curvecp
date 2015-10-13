@@ -109,7 +109,7 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 	if sinceAdjust >= 16*s.txThrottle {
 		if sinceAdjust > 10*time.Second {
 			// No activity for >10s, do a slow restart.
-			s.txThrottle = time.Duration(int64(time.Second) + s.rand.Int63n(int64(time.Second / 8)))
+			s.txThrottle = time.Duration(int64(time.Second) + s.rand.Int63n(int64(time.Second/8)))
 		}
 
 		s.lastThrottleAdjustment = time.Now()
@@ -139,7 +139,7 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 		} else {
 			// We're past the high point of congestion, back off.
 			if s.wasHigh {
-				s.txThrottle += time.Duration(s.rand.Int63n(int64(s.txThrottle)/4))
+				s.txThrottle += time.Duration(s.rand.Int63n(int64(s.txThrottle) / 4))
 				s.lastEdge = time.Now()
 				s.falling = true
 			}
@@ -152,11 +152,11 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 		// ludicrous speed.
 		if s.txThrottle > 100*time.Microsecond {
 			if time.Since(s.lastEdge) < 60*time.Second {
-				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (64 * s.txTimeout) + (5*time.Second))) {
+				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (64 * s.txTimeout) + (5 * time.Second))) {
 					return
 				}
 			} else {
-				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (2*s.txTimeout))) {
+				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (2 * s.txTimeout))) {
 					return
 				}
 			}

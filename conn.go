@@ -57,7 +57,7 @@ type conn struct {
 	readRequest  chan []byte
 	writeRequest chan []byte
 	// Deadlines for those ops
-	readDeadline time.Time
+	readDeadline  time.Time
 	writeDeadline time.Time
 	// From pump to user, result of a read or write.
 	ioResult chan opResult

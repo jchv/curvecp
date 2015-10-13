@@ -6,7 +6,7 @@
 package ringbuf
 
 type Ringbuf struct {
-	buf []byte
+	buf         []byte
 	start, size int
 }
 
@@ -21,8 +21,8 @@ func New(size int) *Ringbuf {
 func (r *Ringbuf) Write(b []byte) int {
 	written := 0
 	for len(b) > 0 && r.size < len(r.buf) {
-		start := (r.start+r.size)%len(r.buf)
-		end := start+len(r.buf)-r.size
+		start := (r.start + r.size) % len(r.buf)
+		end := start + len(r.buf) - r.size
 		if end > len(r.buf) {
 			end = len(r.buf)
 		}
@@ -40,7 +40,7 @@ func (r *Ringbuf) Write(b []byte) int {
 func (r *Ringbuf) Read(b []byte) int {
 	read := 0
 	for len(b) > 0 && r.size > 0 {
-		end := r.start+r.size
+		end := r.start + r.size
 		if end > len(r.buf) {
 			end = len(r.buf)
 		}

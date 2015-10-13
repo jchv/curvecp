@@ -30,6 +30,5 @@ func main() {
 	}
 
 	log.Println("Loop forever")
-	select {
-	}
+	select {}
 }
