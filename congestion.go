@@ -22,7 +22,7 @@ type scheduler struct {
 	txTimeout time.Duration
 
 	// Random source for jittering. NOT a crypto-safe source.
-	rand rand.Rand
+	rand *rand.Rand
 
 	// rttAverage and rttMeanDev form the Jacobson/Karels RTT
 	// estimator, described in appendix A of
@@ -59,16 +59,16 @@ func newScheduler() *scheduler {
 	return &scheduler{
 		txThrottle: time.Second,
 		txTimeout:  time.Second,
-		rand:       rand.New(rand.NewSource(time.Now.UnixNano())),
+		rand:       rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
 func (s *scheduler) init(initRtt time.Duration) {
-	s.txThrottle = rtt
-	s.rttAverage = rtt
-	s.rttDeviation = rtt / 2
-	s.rttHigh = rtt
-	s.rttLow = rtt
+	s.txThrottle = initRtt
+	s.rttAverage = initRtt
+	s.rttMeanDev = initRtt / 2
+	s.rttHigh = initRtt
+	s.rttLow = initRtt
 	s.lastThrottleAdjustment = time.Now()
 }
 
@@ -89,7 +89,7 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 	s.rttAverage += averageDelta / 8
 	meanDevDelta := abs(averageDelta) - s.rttMeanDev
 	s.rttMeanDev += meanDevDelta / 4
-	s.txTimeout = s.rttAverage + 4*s.rttDeviation
+	s.txTimeout = s.rttAverage + 4*s.rttMeanDev
 	// The reference implementation throws in more delay here to
 	// account for delayed acks. Not sure why.
 	s.txTimeout += 8 * s.txThrottle
@@ -109,7 +109,7 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 	if sinceAdjust >= 16*s.txThrottle {
 		if sinceAdjust > 10*time.Second {
 			// No activity for >10s, do a slow restart.
-			s.txThrottle = time.Second + s.rand.int63n(int64(time.Second/8))
+			s.txThrottle = time.Duration(int64(time.Second) + s.rand.Int63n(int64(time.Second / 8)))
 		}
 
 		s.lastThrottleAdjustment = time.Now()
@@ -139,32 +139,31 @@ func (s *scheduler) Adjust(rtt time.Duration) {
 		} else {
 			// We're past the high point of congestion, back off.
 			if s.wasHigh {
-				s.txThrottle += s.rand.Int63n(int64(s.txThrottle/4))
+				s.txThrottle += time.Duration(s.rand.Int63n(int64(s.txThrottle)/4))
 				s.lastEdge = time.Now()
 				s.falling = true
 			}
 		}
 
 		s.wasLow = s.rttAverage < s.rttLow
-		s.wasHigh = s.rttAverage > (rttHigh + 5*time.Millisecond)
+		s.wasHigh = s.rttAverage > (s.rttHigh + 5*time.Millisecond)
 
 		// Occasionally double our send rate, if not already at
 		// ludicrous speed.
-	double:
 		if s.txThrottle > 100*time.Microsecond {
 			if time.Since(s.lastEdge) < 60*time.Second {
-				if time.Now.Before(s.lastDoubling + (4 * s.txThrottle) + (64 * s.txTimeout) + (5*time.Second)) {
-					break double
+				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (64 * s.txTimeout) + (5*time.Second))) {
+					return
 				}
 			} else {
-				if time.Now.Before(s.lastDoubling + (4 * s.txThrottle) + (2*s.txTimeout)) {
-					break double
+				if time.Now().Before(s.lastDoubling.Add((4 * s.txThrottle) + (2*s.txTimeout))) {
+					return
 				}
 			}
 
 			s.txThrottle /= 2
-			lastDoubling = time.Now()
-			lastEdge = time.Now()
+			s.lastDoubling = time.Now()
+			s.lastEdge = time.Now()
 		}
 	}
 }

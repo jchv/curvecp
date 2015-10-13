@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"code.google.com/p/curvecp"
-	"code.google.com/p/go.crypto/nacl/box"
+	"github.com/johnwchadwick/curvecp"
+	"golang.org/x/crypto/nacl/box"
 )
 
 func main() {
