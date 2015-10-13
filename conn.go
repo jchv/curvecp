@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"code.google.com/p/curvecp/ringbuf"
-	"code.google.com/p/go.crypto/nacl/box"
+	"github.com/johnwchadwick/curvecp/ringbuf"
+	"golang.org/x/crypto/nacl/box"
 )
 
 const (

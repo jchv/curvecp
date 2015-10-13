@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/curvecp/freelist"
-	"code.google.com/p/go.crypto/nacl/box"
-	"code.google.com/p/go.crypto/nacl/secretbox"
+	"github.com/johnwchadwick/curvecp/freelist"
+	"golang.org/x/crypto/nacl/box"
+	"golang.org/x/crypto/nacl/secretbox"
 )
 
 var (
